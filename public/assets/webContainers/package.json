@@ -3,7 +3,8 @@
   "type": "module",
   "dependencies": {
     "express": "latest",
-    "nodemon": "latest"
+    "nodemon": "latest",
+    "cors": "latest"
   },
   "scripts": {
     "start": "nodemon --watch './' index.js"

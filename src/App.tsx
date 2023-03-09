@@ -19,14 +19,15 @@ async function installDependencies(webContainerInstance: WebContainer) {
 async function startDevServer(webContainerInstance: WebContainer) {
   await webContainerInstance.spawn("npm", ["run", "start"]);
 
-  webContainerInstance.on("server-ready", (port, url) => {
-    console.log("URL", url);
-  });
+  return webContainerInstance;
 }
 
 function App() {
   useEffect(() => {
+    const frame: any = document.querySelector("#frame");
     window.addEventListener("load", async () => {
+      const webContainerInstance = await WebContainer.boot();
+
       const indexScript = await fetch("assets/webContainers/index.js")
         .then((resp) => resp.text())
         .then((data) => data);
@@ -34,7 +35,6 @@ function App() {
         .then((resp) => resp.text())
         .then((data) => data);
 
-      const webContainerInstance = await WebContainer.boot();
       await webContainerInstance.mount({
         "index.js": {
           file: {
@@ -53,11 +53,20 @@ function App() {
         throw new Error("Installation failed");
       }
 
+      webContainerInstance.on("server-ready", (port, url) => {
+        frame.src = url;
+      });
+
       await startDevServer(webContainerInstance);
     });
   }, []);
 
-  return <div className="container">Test fetching scripts</div>;
+  return (
+    <div className="container">
+      Test fetching scripts
+      <iframe id="frame" src="loading.html"></iframe>
+    </div>
+  );
 }
 
 export default App;

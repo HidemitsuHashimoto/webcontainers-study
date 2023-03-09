@@ -1,14 +1,30 @@
 import express from "express";
+import fs from "fs";
 
 const app = express();
 const port = 3111;
 
 app.get("/", (req, res) => {
-  res.send("Welcome to a WebContainers app Teste! 🥳");
-});
+  const data = '{ name: "Jhon Doe", preference: "Apple" }';
+  const writeStream = fs.createWriteStream("list.txt");
 
-app.get("/test", (req, res) => {
-  res.send("This is a test endpoint");
+  for (let count = 0; count < 10; count++) {
+    res.write(data);
+    writeStream.write(data);
+  }
+
+  writeStream.on("error", (err) => {
+    console.log("ERROR", err);
+  });
+
+  writeStream.on("finish", () => {
+    console.log("Finished");
+  });
+
+  writeStream.end();
+
+  const readStream = fs.createReadStream("list.txt");
+  readStream.pipe(res);
 });
 
 app.listen(port, () => {
