@@ -1,7 +1,6 @@
 import { WebContainer } from "@webcontainer/api";
 import { useEffect } from "react";
 import "./styles.css";
-import { files } from "./webContainer/files";
 
 async function installDependencies(webContainerInstance: WebContainer) {
   const installProcess = await webContainerInstance.spawn("npm", ["install"]);
@@ -17,48 +16,48 @@ async function installDependencies(webContainerInstance: WebContainer) {
   return installProcess.exit;
 }
 
-async function startDevServer(
-  webContainerInstance: WebContainer,
-  iframeEl: any
-) {
+async function startDevServer(webContainerInstance: WebContainer) {
   await webContainerInstance.spawn("npm", ["run", "start"]);
 
   webContainerInstance.on("server-ready", (port, url) => {
     console.log("URL", url);
-    iframeEl.src = url;
   });
 }
 
 function App() {
   useEffect(() => {
     window.addEventListener("load", async () => {
+      const indexScript = await fetch("assets/webContainers/index.js")
+        .then((resp) => resp.text())
+        .then((data) => data);
+      const packageScript = await fetch("assets/webContainers/package.json")
+        .then((resp) => resp.text())
+        .then((data) => data);
+
       const webContainerInstance = await WebContainer.boot();
-      await webContainerInstance.mount(files);
+      await webContainerInstance.mount({
+        "index.js": {
+          file: {
+            contents: indexScript,
+          },
+        },
+        "package.json": {
+          file: {
+            contents: packageScript,
+          },
+        },
+      });
 
       const exitCode = await installDependencies(webContainerInstance);
       if (exitCode !== 0) {
         throw new Error("Installation failed");
       }
 
-      await startDevServer(
-        webContainerInstance,
-        document.querySelector("#preview")
-      );
+      await startDevServer(webContainerInstance);
     });
   }, []);
 
-  return (
-    <div className="container">
-      <div className="editor">
-        <textarea value={files["index.js"].file.contents}>
-          I am a textarea
-        </textarea>
-      </div>
-      <div className="preview">
-        <iframe id="preview" src="loading.html"></iframe>
-      </div>
-    </div>
-  );
+  return <div className="container">Test fetching scripts</div>;
 }
 
 export default App;
