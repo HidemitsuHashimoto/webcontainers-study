@@ -1,5 +1,5 @@
 import { WebContainer } from "@webcontainer/api";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./styles.css";
 
 async function installDependencies(webContainerInstance: WebContainer) {
@@ -16,15 +16,33 @@ async function installDependencies(webContainerInstance: WebContainer) {
   return installProcess.exit;
 }
 
-async function startDevServer(webContainerInstance: WebContainer) {
+async function startDevServer(
+  webContainerInstance: WebContainer,
+  set: (value: any) => void
+) {
   await webContainerInstance.spawn("npm", ["run", "start"]);
 
   webContainerInstance.on("server-ready", (port, url) => {
+    set(url);
     console.log("URL", url);
   });
 }
 
 function App() {
+  const [test, setTest] = useState("");
+
+  // useEffect(() => {
+  //   if (test) {
+  //     async function fetchTest() {
+  //       const testingApi = await fetch(test + "/test").then((resp) =>
+  //         resp.text()
+  //       );
+  //       console.log({ testingApi });
+  //     }
+  //     fetchTest();
+  //   }
+  // }, [test]);
+
   useEffect(() => {
     window.addEventListener("load", async () => {
       const indexScript = await fetch("assets/webContainers/index.js")
@@ -53,7 +71,7 @@ function App() {
         throw new Error("Installation failed");
       }
 
-      await startDevServer(webContainerInstance);
+      await startDevServer(webContainerInstance, setTest);
     });
   }, []);
 
